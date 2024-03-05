@@ -88,10 +88,13 @@ int main() {
         printArr(bin, 8);
         printf(" -- ");
         printArr(gray, 8);
-        seed[5] = seed[0] ^ seed[1] ^ seed[4] ^ seed[5];
-        printf("\n%d", number);
+        int temp = seed[5];
+        seed[5] = seed[0] ^ seed[1] ^ seed[4] ^ temp;
+        printf("\n");
+        printArr(seed, 6);
         number = binToDecConverter(seed, 6);
-        number = number >> 1;
+        printf("\n%d", number);
+        number = (i >> 1) | (number >> 5);
         seed = decToBinConverter(number, 6);
         free(bin);
         free(gray);
