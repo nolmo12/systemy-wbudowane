@@ -283,44 +283,30 @@ unsigned int portValue = 7;
     }
 }
 
-
 void randomNumberGenerator(unsigned int *counter)
 {
-    unsigned int portValue = 7;
-    int goingRight = 1;
+    unsigned int lfsr = 0xACE1u;  // Initial seed (non-zero)
+    unsigned int bit;
+    char prevS4 = PORTDbits.RD13, currentS4;
 
-    while(1)
+    while (1)
     {
-        LATA = portValue;
-        
-        char currentS4 = PORTDbits.RD13;
+        // Generate next pseudo-random number using LFSR
+        bit = ((lfsr >> 0) ^ (lfsr >> 2) ^ (lfsr >> 3) ^ (lfsr >> 5)) & 1;
+        lfsr = (lfsr >> 1) | (bit << 15);
 
-        __delay32(15000);
+        LATA = lfsr & 0xFF;  // Display the lower 8 bits on PORTA
+        __delay_ms(100);
 
-        char newS4 = PORTDbits.RD13;
-
-        
-        if(goingRight == 1)
-        {
-            if(portValue << 1 > 192)
-                goingRight = 0;
-            portValue = portValue << 1;
-        }
-        else
-        {
-            if(portValue >> 1 < 8)
-                goingRight = 1;
-            portValue = portValue >> 1;
-        }
-        
-        
-        if(newS4 - currentS4 == 1) 
+        // Check for button press to exit
+        currentS4 = PORTDbits.RD13;
+        if (currentS4 && !prevS4)
         {
             (*counter)++;
             break;
         }
-        __delay_ms(100);
-    } 
+        prevS4 = currentS4;
+    }
 }
 
 
