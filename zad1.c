@@ -309,6 +309,24 @@ void randomNumberGenerator(unsigned int *counter)
     }
 }
 
+void bitShiftSequence(void) {
+    unsigned portValue = 1;
+    TRISA = 0x0000;
+
+    while (portValue < 255)
+    {
+        LATA = portValue;
+        __delay32(1000000);
+
+        // Check if the current `portValue` needs a reset to avoid overflow
+        if ((portValue & (portValue + 1)) == 0) {
+            portValue |= portValue + 1; // Set the next bit to avoid overflow in the next iteration
+        } else {
+            portValue += (portValue & -portValue) << 1; // Double the step by adding the lowest set bit times two
+        }
+    }
+}
+
 
 int main(void)
 {
