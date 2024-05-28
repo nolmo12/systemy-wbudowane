@@ -35,26 +35,35 @@ void __delay_ms(unsigned long ms)
     __delay32(FCY / 1000 * ms);
 }
 
+int isButtonPressed(int button) {
+    // Simple debouncing mechanism
+    if (button == 1 && PORTDbits.RD13 == 1) {
+        __delay_ms(20); // Debounce delay
+        if (PORTDbits.RD13 == 1) {
+            while (PORTDbits.RD13 == 1); // Wait for button release
+            return 1;
+        }
+    } else if (button == 2 && PORTDbits.RD14 == 1) {
+        __delay_ms(20); // Debounce delay
+        if (PORTDbits.RD14 == 1) {
+            while (PORTDbits.RD14 == 1); // Wait for button release
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void binaryCounterUp(unsigned int *counter)
 {
     unsigned portValue = 0;
-    char currentS6 = 0, currentS7 = 1, currentS4 = 0, prevS6 = 0, prevS7 = 1, prevS4 = 0;
+
     while(1)
     {
         LATA = portValue;
-        prevS4 = PORTDbits.RD13;
-        prevS6 = PORTDbits.RD6;
-        prevS7 = PORTDbits.RD7;
-        __delay32(150000);
-        currentS4 = PORTDbits.RD13;
-        currentS6 = PORTDbits.RD6;
-        currentS7 = PORTDbits.RD7;
-        
         portValue++;
         __delay_ms(100);
-            
-        if(currentS4 - prevS4 == 1)
-        {
+        
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
@@ -64,18 +73,14 @@ void binaryCounterUp(unsigned int *counter)
 void binaryCounterDown(unsigned int *counter)
 {
     unsigned portValue = 255;
-    char currentS6 = 0, currentS7 = 1, currentS4 = 0, prevS6 = 0, prevS7 = 1, prevS4 = 0;
+
     while(1)
     {
         LATA = portValue;
-        prevS4 = PORTDbits.RD13;
-        __delay32(150000);
-        currentS4 = PORTDbits.RD13;
         portValue--;
         __delay_ms(100);
         
-        if(currentS4 - prevS4 == 1)
-        {
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
@@ -90,24 +95,14 @@ unsigned int getGrayCode(unsigned int number)
 void grayCounterUp(unsigned int *counter)
 {
     unsigned int portValue = 0;
-    unsigned int grayCode = 0;
-    char currentS6 = 0, currentS7 = 1, currentS4 = 0, prevS6 = 0, prevS7 = 1, prevS4 = 0;
 
     while(1)
     {
-        grayCode = getGrayCode(portValue);
-        LATA = grayCode;
-        prevS4 = PORTDbits.RD13;
-        __delay32(150000);
-        currentS4 = PORTDbits.RD13;
-
-
+        LATA = getGrayCode(portValue);
         portValue++;
-        
         __delay_ms(100);
 
-        if(currentS4 - prevS4 == 1) 
-        {
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
@@ -117,24 +112,14 @@ void grayCounterUp(unsigned int *counter)
 void grayCounterDown(unsigned int *counter)
 {
     unsigned int portValue = 255;
-    unsigned int grayCode = 0;
-    char currentS6 = 0, currentS7 = 1, currentS4 = 0, prevS6 = 0, prevS7 = 1, prevS4 = 0;
 
     while(1)
     {
-        grayCode = getGrayCode(portValue);
-        LATA = grayCode;
-        prevS4 = PORTDbits.RD13;
-        __delay32(150000);
-        currentS4 = PORTDbits.RD13;
-
-
+        LATA = getGrayCode(portValue);
         portValue--;
-        
         __delay_ms(100);
 
-        if(currentS4 - prevS4 == 1) 
-        {
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
@@ -155,21 +140,11 @@ void bcdCounterUp(unsigned int *counter)
     while(1)
     {
         decimalToBCD(portValue, bcd);
-        
-
         LATA = (bcd[0] << 4) | bcd[1];
-        
-        char currentS4 = PORTDbits.RD13;
-
-        __delay32(15000);
-        
-        char newS4 = PORTDbits.RD13;
-
         portValue++;
         __delay_ms(100);
         
-        if(newS4 - currentS4 == 1) 
-        {
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
@@ -184,24 +159,14 @@ void bcdCounterDown(unsigned int *counter)
     while(1)
     {
         decimalToBCD(portValue, bcd);
-        
-
         LATA = (bcd[0] << 4) | bcd[1];
-        
-        char currentS4 = PORTDbits.RD13;
-
-        __delay32(15000);
-
-        char newS4 = PORTDbits.RD13;
-
         portValue--;
+        __delay_ms(100);
         
-        if(newS4 - currentS4 == 1) 
-        {
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
-        __delay_ms(100);
     }
 }
 
@@ -213,14 +178,8 @@ void snake(unsigned int *counter)
     while(1)
     {
         LATA = portValue;
-        
-        char currentS4 = PORTDbits.RD13;
+        __delay_ms(100);
 
-        __delay32(15000);
-
-        char newS4 = PORTDbits.RD13;
-
-        
         if(goingRight == 1)
         {
             if(portValue << 1 > 192)
@@ -233,33 +192,24 @@ void snake(unsigned int *counter)
                 goingRight = 1;
             portValue = portValue >> 1;
         }
-        
-        
-        if(newS4 - currentS4 == 1) 
-        {
+
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
-        __delay_ms(100);
     }
 }
 
 void queue(unsigned int *counter)
 {
-unsigned int portValue = 7;
+    unsigned int portValue = 7;
     int goingRight = 1;
 
     while(1)
     {
         LATA = portValue;
-        
-        char currentS4 = PORTDbits.RD13;
+        __delay_ms(100);
 
-        __delay32(15000);
-
-        char newS4 = PORTDbits.RD13;
-
-        
         if(goingRight == 1)
         {
             if(portValue << 1 > 192)
@@ -272,14 +222,11 @@ unsigned int portValue = 7;
                 goingRight = 1;
             portValue = portValue >> 1;
         }
-        
-        
-        if(newS4 - currentS4 == 1) 
-        {
+
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
-        __delay_ms(100);
     }
 }
 
@@ -287,7 +234,6 @@ void randomNumberGenerator(unsigned int *counter)
 {
     unsigned int lfsr = 0xACE1u;  // Initial seed (non-zero)
     unsigned int bit;
-    char prevS4 = PORTDbits.RD13, currentS4;
 
     while (1)
     {
@@ -298,18 +244,14 @@ void randomNumberGenerator(unsigned int *counter)
         LATA = lfsr & 0xFF;  // Display the lower 8 bits on PORTA
         __delay_ms(100);
 
-        // Check for button press to exit
-        currentS4 = PORTDbits.RD13;
-        if (currentS4 && !prevS4)
-        {
+        if (isButtonPressed(1)) {
             (*counter)++;
             break;
         }
-        prevS4 = currentS4;
     }
 }
 
-void bitShiftSequence(void) {
+void bitShiftSequence(unsigned int *counter) {
     unsigned portValue = 1;
     TRISA = 0x0000;
 
@@ -324,14 +266,16 @@ void bitShiftSequence(void) {
         } else {
             portValue += (portValue & -portValue) << 1; // Double the step by adding the lowest set bit times two
         }
+
+        if (isButtonPressed(1)) {
+            (*counter)++;
+            break;
+        }
     }
 }
 
-
 int main(void)
 {
-    char currentS4 = 0, prevS4 = 0;
-    
     TRISA = 0x0000;
     TRISD = 0xFFFF;
     
@@ -340,16 +284,13 @@ int main(void)
     while(1)
     {
         LATA = 0;
-        prevS4 = PORTDbits.RD13;
-        __delay32(150000);
-        currentS4 = PORTDbits.RD13;
-        
-        if(currentS4 - prevS4 == 1)
-        {
+        __delay_ms(150);  // Adjusted to use __delay_ms
+
+        if (isButtonPressed(2)) {
             counter++;
         }
         
-        switch(counter % 9)
+        switch(counter % 10)
         {
             case 0:
                 binaryCounterUp(&counter);
@@ -378,10 +319,12 @@ int main(void)
             case 8:
                 randomNumberGenerator(&counter);
                 break;
+            case 9:
+                bitShiftSequence(&counter);
+                break;
             default:
                 break;
         }
-        
     }
     
     return 0;
